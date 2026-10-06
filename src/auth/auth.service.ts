@@ -20,11 +20,14 @@ export class AuthService {
     password: string,
   ): Promise<{ access_token: string }> {
     const user = await this.usersService.findOne(email);
+    console.log('LOGIN EMAIL:', email);
+    console.log('USER FOUND:', !!user);
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log('PASSWORD MATCH:', passwordMatch);
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid email or password');
     }
