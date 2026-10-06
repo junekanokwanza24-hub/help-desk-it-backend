@@ -57,16 +57,13 @@ export class AuthService {
       throw new BadRequestException('Email already in use');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = await this.usersService.create({
       email,
-      password: hashedPassword,
+      password,
       role,
       firstName,
       lastName,
     });
-
     const payload = {
       sub: user.id,
       email: user.email,
