@@ -66,6 +66,7 @@ model Tickets {
   assignedTo   User? @relation("AssignedTickets",fields: [assignedToId],references: [id])
 
   department   String?
+  Building Int?
   phoneNumber  String?
   reporterName String?
   deviceName   String?
@@ -78,6 +79,11 @@ model Tickets {
   updatedAt  DateTime  @updatedAt
   resolvedAt DateTime?
   closedAt   DateTime?
+}
+
+model Department {
+  id        String @id @default(uuid())
+  departmentName String?
 }
 
 model Notification {

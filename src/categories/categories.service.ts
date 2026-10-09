@@ -21,24 +21,6 @@ export class CategoriesService {
     return this.prisma.category.create({ data: dto });
   }
 
-  async findOne(id: string) {
-    const category = await this.prisma.category.findUnique({ where: { id } });
-    if (!category) {
-      throw new NotFoundException(`Category ${id} not found`);
-    }
-    return category;
-  }
-
-  async update(id: string, dto: UpdateCategoryDto) {
-    await this.findOne(id);
-    return this.prisma.category.update({ where: { id }, data: dto });
-  }
-
-  async remove(id: string) {
-    await this.findOne(id);
-    await this.prisma.category.delete({ where: { id } });
-    return { id, deleted: true };
-  }
   async findAll() {
     const categories = await this.prisma.category.findMany({
       orderBy: { name: 'asc' },
@@ -54,5 +36,35 @@ export class CategoriesService {
       name: c.name,
       ticketCount: c._count.tickets,
     }));
+  }
+
+  async findOne(id: string) {
+    const category = await this.prisma.category.findUnique({ where: { id } });
+    if (!category) {
+      throw new NotFoundException(`Category ${id} not found`);
+    }
+    return category;
+  }
+
+  async update(id: string, dto: UpdateCategoryDto) {
+    await this.findOne(id);
+
+    // name is @unique — return a clean 409 instead of a Prisma 500
+    if (dto.name) {
+      const duplicate = await this.prisma.category.findFirst({
+        where: { name: dto.name, NOT: { id } },
+      });
+      if (duplicate) {
+        throw new ConflictException(`Category "${dto.name}" already exists`);
+      }
+    }
+
+    return this.prisma.category.update({ where: { id }, data: dto });
+  }
+
+  async remove(id: string) {
+    await this.findOne(id);
+    await this.prisma.category.delete({ where: { id } });
+    return { id, deleted: true };
   }
 }
