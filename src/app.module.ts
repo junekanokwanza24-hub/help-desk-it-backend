@@ -11,6 +11,7 @@ import { AttachmentsModule } from './attachments/attachments.module.js';
 import { CommentsModule } from './comments/comments.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { DashboardModule } from './dashboard/dashboard.module.js';
+import { DepartmentModule } from './departments/departments.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DashboardModule } from './dashboard/dashboard.module.js';
     TicketsModule,
     NotificationsModule,
     DashboardModule,
+    DepartmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

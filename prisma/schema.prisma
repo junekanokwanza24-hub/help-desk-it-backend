@@ -82,8 +82,8 @@ model Tickets {
 }
 
 model Department {
-  id        String @id @default(uuid())
-  departmentName String?
+  id   String @id @default(uuid())
+  name String @unique @map("departmentName")
 }
 
 model Notification {
