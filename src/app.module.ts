@@ -10,7 +10,7 @@ import { CategoriesModule } from './categories/categories.module.js';
 import { AttachmentsModule } from './attachments/attachments.module.js';
 import { CommentsModule } from './comments/comments.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
-import { DashboardModule } from './dashboard/dashboard.module';
+import { DashboardModule } from './dashboard/dashboard.module.js';
 
 @Module({
   imports: [
