@@ -10,6 +10,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { QueryTicketDto } from './dto/query-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class TicketsService {
@@ -36,6 +37,8 @@ export class TicketsService {
         phoneNumber: dto.phoneNumber,
         reporterName: dto.reporterName,
         deviceName: dto.deviceName,
+        floor: dto.floor,
+        type: dto.type,
         category: { connect: { id: dto.categoryId } },
         createdBy: { connect: { id: createdById } },
         ...(dto.assignedToId && {
@@ -72,6 +75,8 @@ export class TicketsService {
       ...(priority && { priority }),
       ...(categoryId && { categoryId }),
       ...(assignedToId && { assignedToId }),
+      ...(query.type && { type: query.type }),
+      ...(query.department && { department: query.department }),
     };
 
     const [items, total] = await this.prisma.$transaction([
@@ -122,7 +127,10 @@ export class TicketsService {
   async update(id: string, dto: UpdateTicketDto) {
     const existing = await this.findOne(id); // ตรวจว่ามีอยู่จริงก่อน + throw 404
 
-    const statusTimestamps = this.resolveStatusTimestamps(dto.status);
+    const statusTimestamps = this.resolveStatusTimestamps(
+      dto.status,
+      existing.status,
+    );
     const { categoryId, assignedToId, ...rest } = dto;
 
     const ticket = await this.prisma.tickets.update({
@@ -178,25 +186,30 @@ export class TicketsService {
 
     return ticket;
   }
-
+  private readonly logger = new Logger(TicketsService.name);
   // สร้าง notification ให้คนที่ถูก assign — เรียกซ้ำได้จากหลายจุด (create/update/assign)
   private async notifyAssignment(
     ticketId: string,
     assignedToId: string,
     ticketTitle: string,
   ) {
-    await this.notificationsService.create({
-      message: `คุณได้รับมอบหมายงาน: "${ticketTitle}"`,
-      userId: assignedToId,
-      ticketId,
-    });
+    try {
+      await this.notificationsService.create({
+        message: `คุณได้รับมอบหมายงาน: "${ticketTitle}"`,
+        userId: assignedToId,
+        ticketId,
+      });
+    } catch (e) {
+      this.logger.warn(`Notification failed for ticket ${ticketId}: ${e}`);
+    }
   }
 
   // set resolvedAt/closedAt อัตโนมัติตาม status ที่เปลี่ยน
-  private resolveStatusTimestamps(status?: TicketStatus) {
-    if (!status) return {};
-    if (status === TicketStatus.SUCCESS) return { resolvedAt: new Date() };
-    if (status === TicketStatus.ABORTED) return { closedAt: new Date() };
-    return {};
+  private resolveStatusTimestamps(next?: TicketStatus, prev?: TicketStatus) {
+    if (!next || next === prev) return {}; // ไม่เปลี่ยนสถานะ → ไม่แตะ
+    return {
+      resolvedAt: next === TicketStatus.SUCCESS ? new Date() : null,
+      closedAt: next === TicketStatus.ABORTED ? new Date() : null,
+    };
   }
 }

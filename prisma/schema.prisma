@@ -47,12 +47,16 @@ model Category {
   name    String   @unique
   tickets Tickets[]
 }
-
+enum TicketType {
+  SOFTWARE
+  HARDWARE
+}
 model Tickets {
   id          String       @id @default(uuid())
   title       String
   description String
-
+  type  TicketType @default(SOFTWARE)
+  floor String?
   status   TicketStatus  @default(PENDING)
   priority PriorityType  @default(MEDIUM)
 

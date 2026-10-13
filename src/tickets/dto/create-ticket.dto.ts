@@ -4,7 +4,9 @@ import {
   IsOptional,
   IsEnum,
   IsUUID,
+  MaxLength,
 } from 'class-validator';
+import { TicketType } from '@prisma/client';
 import { TicketStatus, PriorityType } from '@prisma/client';
 
 export class CreateTicketDto {
@@ -47,4 +49,13 @@ export class CreateTicketDto {
   @IsString()
   @IsNotEmpty()
   deviceName!: string;
+
+  @IsOptional()
+  @IsEnum(TicketType)
+  type?: TicketType;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  floor?: string;
 }

@@ -1,6 +1,13 @@
-import { IsOptional, IsEnum, IsUUID, IsInt, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsEnum,
+  IsUUID,
+  IsInt,
+  Min,
+  IsString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { TicketStatus, PriorityType } from '@prisma/client';
+import { TicketStatus, PriorityType, TicketType } from '@prisma/client';
 
 export class QueryTicketDto {
   @IsOptional()
@@ -30,4 +37,12 @@ export class QueryTicketDto {
   @IsInt()
   @Min(1)
   limit?: number = 20;
+
+  @IsOptional()
+  @IsEnum(TicketType)
+  type?: TicketType;
+
+  @IsOptional()
+  @IsString()
+  department?: string;
 }
