@@ -60,7 +60,7 @@ export class TicketsService {
     return ticket;
   }
 
-  async findAll(query: QueryTicketDto) {
+  async findAll(query: QueryTicketDto, user: { id: string; role: string }) {
     const {
       status,
       priority,
@@ -70,7 +70,7 @@ export class TicketsService {
       limit = 20,
     } = query;
 
-    const where = {
+    const filters = {
       ...(status && { status }),
       ...(priority && { priority }),
       ...(categoryId && { categoryId }),
@@ -78,6 +78,19 @@ export class TicketsService {
       ...(query.type && { type: query.type }),
       ...(query.department && { department: query.department }),
     };
+
+    const isAdmin = user.role === 'ADMIN';
+
+    const where = isAdmin
+      ? filters
+      : {
+          AND: [
+            filters,
+            {
+              OR: [{ createdById: user.id }, { assignedToId: user.id }],
+            },
+          ],
+        };
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.tickets.findMany({
@@ -99,7 +112,6 @@ export class TicketsService {
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
-
   async findOne(id: string) {
     const ticket = await this.prisma.tickets.findUnique({
       where: { id },

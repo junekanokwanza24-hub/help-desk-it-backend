@@ -8,6 +8,7 @@ import {
   Body,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
@@ -29,10 +30,9 @@ export class TicketsController {
   }
 
   @Get()
-  findAll(@Query() query: QueryTicketDto) {
-    return this.ticketsService.findAll(query);
+  findAll(@Query() query: QueryTicketDto, @Req() req) {
+    return this.ticketsService.findAll(query, req.user);
   }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.ticketsService.findOne(id);
