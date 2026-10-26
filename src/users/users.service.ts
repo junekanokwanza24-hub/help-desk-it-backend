@@ -5,12 +5,16 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { JwtService } from '@nestjs/jwt';
 
 const SALT_ROUNDS = 10;
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwt: JwtService,
+  ) {}
 
   async findAll() {
     return this.prisma.user.findMany({
@@ -84,7 +88,7 @@ export class UsersService {
       }
     }
 
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data: {
         ...(data.firstName && { firstName: data.firstName }),
@@ -100,8 +104,17 @@ export class UsersService {
         createdAt: true,
       },
     });
-  }
 
+    const access_token = this.jwt.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
+
+    return { user, access_token };
+  }
   async changePassword(id: string, data: ChangePasswordDto) {
     const hashedPassword = await bcrypt.hash(data.newPassword, SALT_ROUNDS);
     await this.prisma.user.update({
