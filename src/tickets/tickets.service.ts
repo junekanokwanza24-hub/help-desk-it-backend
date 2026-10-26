@@ -11,6 +11,7 @@ import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { QueryTicketDto } from './dto/query-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TicketsService {
@@ -59,36 +60,57 @@ export class TicketsService {
 
     return ticket;
   }
-
   async findAll(query: QueryTicketDto, user: { id: string; role: string }) {
     const {
       status,
       priority,
+      type,
       categoryId,
       assignedToId,
+      department,
+      dateFrom,
+      dateTo,
       page = 1,
       limit = 20,
     } = query;
 
-    const filters = {
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      throw new BadRequestException(
+        'dateFrom must be before or equal to dateTo',
+      );
+    }
+
+    // +07:00 = เวลาไทย กันวันเหลื่อมจาก UTC
+    const createdAt: Prisma.DateTimeFilter | undefined =
+      dateFrom || dateTo
+        ? {
+            ...(dateFrom && {
+              gte: new Date(`${dateFrom.slice(0, 10)}T00:00:00.000+07:00`),
+            }),
+            ...(dateTo && {
+              lte: new Date(`${dateTo.slice(0, 10)}T23:59:59.999+07:00`),
+            }),
+          }
+        : undefined;
+
+    const filters: Prisma.TicketsWhereInput = {
       ...(status && { status }),
       ...(priority && { priority }),
+      ...(type && { type }),
       ...(categoryId && { categoryId }),
       ...(assignedToId && { assignedToId }),
-      ...(query.type && { type: query.type }),
-      ...(query.department && { department: query.department }),
+      ...(department && { department }),
+      ...(createdAt && { createdAt }),
     };
 
     const isAdmin = user.role === 'ADMIN';
 
-    const where = isAdmin
+    const where: Prisma.TicketsWhereInput = isAdmin
       ? filters
       : {
           AND: [
             filters,
-            {
-              OR: [{ createdById: user.id }, { assignedToId: user.id }],
-            },
+            { OR: [{ createdById: user.id }, { assignedToId: user.id }] },
           ],
         };
 

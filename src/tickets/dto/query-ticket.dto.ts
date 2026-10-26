@@ -1,13 +1,14 @@
-import {
-  IsOptional,
-  IsEnum,
-  IsUUID,
-  IsInt,
-  Min,
-  IsString,
-} from 'class-validator';
 import { Type } from 'class-transformer';
-import { TicketStatus, PriorityType, TicketType } from '@prisma/client';
+import {
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
+import { PriorityType, TicketStatus, TicketType } from '@prisma/client';
 
 export class QueryTicketDto {
   @IsOptional()
@@ -19,12 +20,28 @@ export class QueryTicketDto {
   priority?: PriorityType;
 
   @IsOptional()
-  @IsUUID()
+  @IsEnum(TicketType)
+  type?: TicketType;
+
+  @IsOptional()
+  @IsString()
   categoryId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   assignedToId?: string;
+
+  @IsOptional()
+  @IsString()
+  department?: string;
+
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string; // YYYY-MM-DD
+
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string; // YYYY-MM-DD
 
   @IsOptional()
   @Type(() => Number)
@@ -36,13 +53,6 @@ export class QueryTicketDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   limit?: number = 20;
-
-  @IsOptional()
-  @IsEnum(TicketType)
-  type?: TicketType;
-
-  @IsOptional()
-  @IsString()
-  department?: string;
 }
