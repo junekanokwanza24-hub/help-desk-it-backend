@@ -30,9 +30,9 @@ export class UsersController {
   // me routes ต้องอยู่ก่อน :id เสมอ
   @Patch('me')
   updateMe(@CurrentUser() user: RequestUser, @Body() dto: UpdateProfileDto) {
+    console.log('updateMe', user.id, dto);
     return this.usersService.updateProfile(user.id, dto);
   }
-
   @Patch('me/password')
   changeMyPassword(
     @CurrentUser() user: RequestUser,
